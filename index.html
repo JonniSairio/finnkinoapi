@@ -1,0 +1,113 @@
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Leffahaku</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
+
+  </head>
+
+
+
+
+  <body background="tausta.jpg">
+
+
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <a class="navbar-brand" href="#">Finnkino Movie App</a>
+
+
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+
+          <li class="nav-item dropdown show">
+            <select id="theatres">
+			</select>
+          </li>
+        </ul>
+
+          <button id="search" class="btn btn-outline-success">Hae päivän elokuvat</button>
+      </div>
+    </nav>
+
+    <main role="main" class="container">
+
+      <table id="movies" class="table" style="margin-top: 60px;">
+	  </table>
+
+
+
+    </main>
+
+
+
+
+    <script src="js/jquery-3.2.1.min.js"></script>
+
+	<script type="text/javascript">
+        $(document).ready(function () {
+            $.ajax({
+                type: "GET",
+                url: "https://www.finnkino.fi/xml/TheatreAreas/",
+                dataType: "xml",
+                success: function (xml) {
+                    $(xml).find('TheatreArea').each(function () {
+                        var id = $(this).find('ID').text();
+                        var name = $(this).find('Name').text();
+
+                        $('<option value="' + id + '">' + name + '</option>').appendTo('#theatres');
+                    });
+                },
+                error: function (xhr) {
+                    alert(xhr.responseText);
+                }
+            });
+
+        });
+      </script>
+
+	<script type="text/javascript">
+        $( "#search" ).click(function() {
+        	$("#movies").empty();
+        	var chosenTheatre = $( "#theatres" ).val();
+            $.ajax({
+                type: "GET",
+                url: "https://www.finnkino.fi/xml/Schedule/?area=" + chosenTheatre,
+                dataType: "xml",
+                success: function (xml) {
+                    $(xml).find('Show').each(function () {
+                        var title = $(this).find('OriginalTitle').text();
+
+                        var length = $(this).find('LengthInMinutes').text();
+                        var genres = $(this).find('Genres').text();
+                        var imgUrl = $(this).find('EventMediumImagePortrait').text();
+                        var theatre = $(this).find('Theatre').text();
+                        var year = $(this).find('ProductionYear').text();
+
+                        var dttmShowStart = $(this).find('dttmShowStart').text();
+                        var TheatreAndAuditorium = $(this).find('TheatreAndAuditorium').text();
+                        var ticketUrl = $(this).find('ShowURL').text();
+
+                        var showTime = new Date(dttmShowStart);
+                        var startTimeString = showTime.getDate() + '.' + showTime.getMonth() + ' klo. ' + showTime.getHours() + ':' + showTime.getMinutes();
+
+                        $('<tr><td><b>Elokuvan nimi: </b>' + title + '<br><b>Vuosi: </b>' + year + '<br><b>Pituus: </b>' + length + 'min<br><b>Genret: </b>' + genres + '<br><br><br>' +
+                        '<b>Näytösaika: </b>' + startTimeString + '<br><b>Sali ja teatteri: </b>' + TheatreAndAuditorium + '</td><td>' +
+                        '<img src="' + imgUrl + '" width="200px"/></td>' +
+                        '<td><a class="btn btn-primary" href="' + ticketUrl + '" role="button">Varaa liput</a></td></tr>').appendTo('#movies');
+                    });
+                },
+                error: function (xhr) {
+                    alert(xhr.responseText);
+                }
+            });
+        });
+      </script>
+
+
+
+</body></html>
